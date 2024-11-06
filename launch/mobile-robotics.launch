@@ -1,0 +1,47 @@
+<?xml version="1.0" ?>
+<launch>
+    <env name="GAZEBO_MODEL_PATH" value="$(find mobile-robotics_2024)/maps/models"/>
+    <arg name="x_pos"   default="-0.55"/>
+    <arg name="y_pos"   default="6.2"/>
+    <arg name="z_pos"   default="0"/> 
+    <arg name="roll"    default="0"/>
+    <arg name="pitch"   default="0"/>
+    <arg name="yaw"     default="1.5707"/>
+    <arg name="gui"     default="true"/>
+
+
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="world_name"      value="$(find mobile-robotics_2024)/maps/project/project.world"/>
+        <arg name="paused"          value="false"/>
+        <arg name="use_sim_time"    value="true"/>
+        <arg name="gui"             value="$(arg gui)"/>
+        <arg name="headless"        value="false"/>
+        <arg name="debug"           value="false"/>
+        <arg name="extra_gazebo_args"   value="--verbose"/>
+    </include>
+
+    <!-- Bringup TFs -->
+    <include file="$(find turtlebot3_bringup)/launch/turtlebot3_remote.launch"/>
+    <!-- Spawn Simulated Robot in GAZEBO -->
+    <param name="robot_description" command="$(find xacro)/xacro --inorder $(find mobile-robotics_2024)/urdf/turtlebot3_burger_for_autorace.urdf.xacro" />
+    <node pkg="gazebo_ros" type="spawn_model" name="spawn_urdf" args="-urdf -model turtlebot3_burger -x $(arg x_pos) -y $(arg y_pos) -z $(arg z_pos) -Y $(arg yaw) -param robot_description" />
+
+    <!-- Start Move_Base -->
+    <!-- <include file="$(find mobile-robotics_2024)/launch/move_base_project.launch"/> -->
+
+    <!-- Map server -->
+    <node pkg="map_server" name="map_server" type="map_server" args="$(find mobile-robotics_2024)/maps/project/maze.yaml"/>
+    <!-- AMCL -->
+    <include file="$(find mobile-robotics_2024)/launch/amcl.launch"/>
+   
+
+    <!-- Start Dynamic Reconfigure -->
+    <node name="reconf" pkg="rqt_reconfigure" type="rqt_reconfigure"/>
+    <!-- RVIZ Configuration -->
+    <node pkg="rviz" name="rviz" type="rviz" args="-d $(find mobile-robotics_2024)/config/config.rviz"/>
+  
+    <!-- Autonomous Drive + Path Planning & Line Follower custom nodes -->
+    <node pkg="mobile-robotics_2024" name="motion_node" type="line_follower_main_motion.py" output="screen"/>
+    <node pkg="mobile-robotics_2024" name="line_detection" type="line_follower_main_detection.py" output="screen" />
+    <!-- <node pkg="mobile-robotics_2024" type="path_planing.py" name="path_planning_node" output="screen"/> -->
+</launch>
