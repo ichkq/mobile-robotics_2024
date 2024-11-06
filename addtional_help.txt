@@ -1,0 +1,11 @@
+    cv::cvtColor(input, LineDetecter::img_hsv, CV_BGR2HSV);     // Converts input bgr8 image to HSV image and stores it in img_hsv
+    // Set thresholds //
+    LineDetecter::LowerYellow={20,100,100};
+    LineDetecter::UpperYellow={30,255,255};
+    // Generate binary image //
+    cv::inRange(LineDetecter::img_hsv, LowerYellow, UpperYellow, LineDetecter::img_mask);    // Take HSV image, Lower/upper thresh and store binary img in img_mask
+
+
+    //-- Cropping Image --//
+    img_mask.copyTo(LineDetecter::img_mask_u);
+    img_mask_u(cv::Rect(0,0,w,0.6*h))=0;        // Take cropped image to compute Moments and contours
